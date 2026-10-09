@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leather math - the app</title>
+<style>
+  :root { --ink:#2a2118; --bg:#f5f1ea; --card:#fff; --accent:#6b4423; --accent2:#8a5a30; --soft:#ecdfcf; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); padding:18px; }
+  .wrap { max-width:1180px; margin:0 auto; }
+  .lede { text-align:center; color:#5c4f3e; margin:6px 0 16px; font-size:15px; max-width:760px; margin-left:auto; margin-right:auto; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:18px; }
+  .card { background:var(--card); border-radius:14px; padding:22px; box-shadow:0 1px 3px rgba(60,45,25,.08); }
+  h2 { font-size:19px; margin-bottom:14px; }
+  label { display:block; font-size:13px; color:#6d5f4d; margin:10px 0 4px; }
+  input, select { width:100%; padding:9px 10px; border:1px solid #d8cbba; border-radius:8px; font-size:15px; background:#fffdf9; }
+  button { width:100%; margin-top:16px; padding:12px; border:0; border-radius:9px; background:var(--accent); color:#fff; font-size:15px; font-weight:600; cursor:pointer; }
+  button:hover { background:var(--accent2); }
+  .big { font-size:34px; font-weight:700; margin:14px 0 2px; }
+  .cap { font-size:13px; color:#6d5f4d; }
+  .pill { display:inline-block; margin-top:10px; padding:5px 12px; border-radius:20px; font-size:13px; font-weight:600; }
+  .pill.warm { background:var(--soft); color:var(--accent); }
+  table { width:100%; margin-top:12px; border-collapse:collapse; font-size:14px; }
+  td { padding:7px 0; border-bottom:1px solid #ece3d6; }
+  td:last-child { text-align:right; font-weight:600; }
+  .err { color:#a3341f; font-size:14px; margin-top:10px; }
+  .foot { margin-top:20px; font-size:12.5px; color:#7c6f5d; line-height:1.6; }
+  .foot a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="lede">Tutorials say "cut a blank, punch some holes, stitch it up" and never give the numbers. Blank length, hide yield and thread pull are multiplication. Run yours before the knife touches leather.</p>
+  <div class="cards">
+    <div class="card">
+      <h2>Belt blank</h2>
+      <label for="b_waist">Waist where the belt sits (cm)</label>
+      <input id="b_waist" type="number" value="90" min="0" step="1">
+      <button id="b_go">Size the blank</button>
+      <div class="big" id="b_blank">-</div>
+      <div class="cap">blank length to cut</div>
+      <div class="pill warm" id="b_verdict" style="display:none"></div>
+      <table id="b_rows" style="display:none">
+        <tr><td>holes to punch</td><td id="b_holes">-</td></tr>
+        <tr><td>hole spacing</td><td id="b_spacing">-</td></tr>
+        <tr><td>middle hole from the tip</td><td id="b_mid">-</td></tr>
+      </table>
+      <div class="err" id="b_err"></div>
+    </div>
+    <div class="card">
+      <h2>Hide yield</h2>
+      <label for="h_w">Piece width (cm)</label>
+      <input id="h_w" type="number" value="10" min="0" step="0.5">
+      <label for="h_l">Piece length (cm)</label>
+      <input id="h_l" type="number" value="15" min="0" step="0.5">
+      <label for="h_n">How many pieces</label>
+      <input id="h_n" type="number" value="2" min="0" step="1">
+      <button id="h_go">Count the leather</button>
+      <div class="big" id="h_sqft">-</div>
+      <div class="cap">square feet with 15% cutting loss</div>
+      <div class="pill warm" id="h_verdict" style="display:none"></div>
+      <table id="h_rows" style="display:none">
+        <tr><td>area with loss</td><td id="h_area">-</td></tr>
+      </table>
+      <div class="err" id="h_err"></div>
+    </div>
+    <div class="card">
+      <h2>Saddle-stitch thread</h2>
+      <label for="t_seam">Seam length (cm)</label>
+      <input id="t_seam" type="number" value="50" min="0" step="1">
+      <label for="t_spc">Stitches per cm</label>
+      <input id="t_spc" type="number" value="0.5" min="0" step="0.05">
+      <button id="t_go">Wind the thread</button>
+      <div class="big" id="t_total">-</div>
+      <div class="cap">total thread (4x rule, labeled)</div>
+      <div class="pill warm" id="t_verdict" style="display:none"></div>
+      <table id="t_rows" style="display:none">
+        <tr><td>stitches</td><td id="t_stitches">-</td></tr>
+        <tr><td>per needle</td><td id="t_per">-</td></tr>
+      </table>
+      <div class="err" id="t_err"></div>
+    </div>
+  </div>
+  <p class="foot">Belt allowances (12 cm tip, 10 cm fold-back, 15 cm to the last hole, 5 holes at 2.5 cm), 15% cutting loss and the 4x thread rule are labeled guidance from published leathercraft norms; your pattern, hide and stitch move the real numbers. The arithmetic on top of them is exact. <a href="index.html">Why this exists</a></p>
+</div>
+<script src="engine.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const g = id => parseFloat($(id).value);
+function show(id, txt) { const e = $(id); e.textContent = txt; e.style.display = txt ? 'inline-block' : 'none'; }
+document.getElementById('b_go').onclick = () => {
+  $('b_err').textContent = '';
+  try {
+    const r = Leathermath.belt(g('b_waist'));
+    $('b_blank').textContent = r.blankCm + ' cm';
+    show('b_verdict', r.verdict);
+    $('b_holes').textContent = r.holes;
+    $('b_spacing').textContent = r.spacingCm + ' cm';
+    $('b_mid').textContent = r.middleHoleFromTipCm + ' cm';
+    $('b_rows').style.display = 'table';
+  } catch (e) { $('b_err').textContent = e.message; }
+};
+document.getElementById('h_go').onclick = () => {
+  $('h_err').textContent = '';
+  try {
+    const r = Leathermath.hide(g('h_w'), g('h_l'), g('h_n'));
+    $('h_sqft').textContent = r.sqft + ' sqft';
+    show('h_verdict', r.verdict);
+    $('h_area').textContent = r.areaCm2 + ' cm2';
+    $('h_rows').style.display = 'table';
+  } catch (e) { $('h_err').textContent = e.message; }
+};
+document.getElementById('t_go').onclick = () => {
+  $('t_err').textContent = '';
+  try {
+    const r = Leathermath.thread(g('t_seam'), g('t_spc'));
+    $('t_total').textContent = r.totalCm + ' cm';
+    show('t_verdict', r.verdict);
+    $('t_stitches').textContent = r.stitches;
+    $('t_per').textContent = r.perNeedleCm + ' cm';
+    $('t_rows').style.display = 'table';
+  } catch (e) { $('t_err').textContent = e.message; }
+};
+</script>
+</body>
+</html>
